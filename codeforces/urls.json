@@ -1,0 +1,13 @@
+{
+    "contest_calendar" : "https://codeforces.com/contests",
+    "user_info" : {
+        "home" : "https://codeforces.com/profile/",
+        "contest" : "https://codeforces.com/contests/with/",
+        "submission" : "https://codeforces.com/submissions/"
+    },
+    "contest" : {
+        "problem" : "https://codeforces.com/contests/",
+        "submission" : "https://ac.nowcoder.com/acm-heavy/acm/contest/status-list",
+        "rank" : "https://ac.nowcoder.com/acm-heavy/acm/contest/real-time-rank-data"
+    }
+}

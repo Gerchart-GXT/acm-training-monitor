@@ -1,0 +1,12 @@
+{
+    "contest_calendar" : "https://ac.nowcoder.com/acm/calendar/contest",
+    "user_info" : {
+        "prefix" : "https://ac.nowcoder.com/acm/contest/profile/",
+        "contest" : "",
+        "submission" : "/practice-coding"
+    },
+    "contest" : {
+        "submission" : "https://ac.nowcoder.com/acm-heavy/acm/contest/status-list",
+        "rank" : "https://ac.nowcoder.com/acm-heavy/acm/contest/real-time-rank-data"
+    }
+}
