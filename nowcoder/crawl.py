@@ -39,7 +39,6 @@ class crawl_nowcoder_contest_rank :
         self.user_id = str(user_id)
         self.accept_cnt = str(accept_cnt)
         self.ranking = str(ranking)
-        
 
 class crawl_nowcoder :
     def __init__(self, requests_header, requests_timeout = 3):
@@ -48,7 +47,6 @@ class crawl_nowcoder :
         self.requests_header = requests_header
         self.requests_timeout = requests_timeout
         
-    
     def get_recent_contest_info(self):
         try:
             now_timestap = int('{:.0f}'.format(time.time()) + "000")
@@ -94,6 +92,21 @@ class crawl_nowcoder :
             return contest_info
         except Exception as e:
             print(e)
+
+    def get_user_info(self, user_id) :
+        url = self.urls["user_info"]["prefix"] + str(user_id)
+        r = requests.get(url=url, headers=self.requests_header, timeout=self.requests_timeout)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        if soup.select("div.null") or r.history:
+            return None   
+        user_name = soup.select("div.nk-container div.coder-info-detail a")[0].text
+        user_rank = soup.select("div.my-state-main div.my-state-item div")[0].text
+        return {
+            "user_id" : user_id,
+            "user_name" : user_name,
+            "user_rank" : user_rank
+        }
+
     
     def get_user_submission(self, user_id, user_name, latest_timestamp=0) :
         try : 
@@ -140,7 +153,6 @@ class crawl_nowcoder :
                     pro_name = line[1].text
                     status = line[2].text
                     sub_time = re.sub(r'\D', '', line[-1].text)
-                    print(sub_time, latest_timestamp)
                     if int(sub_time) <= int(latest_timestamp) :
                         return result
                     if status == "正在判题" :

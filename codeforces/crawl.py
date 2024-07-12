@@ -6,8 +6,6 @@ import pytz
 import html
 import re
 from bs4 import BeautifulSoup
-import cfscrape
-
 
 class crawl_codeforces_exception(Exception):
     def __init__(self, message):
