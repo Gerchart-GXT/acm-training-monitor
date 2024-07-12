@@ -15,6 +15,12 @@ class API_now_coder(MethodView):
         action = request.args.get('action')
         if action == 'get_latest_contest':
             return self.get_latest_contest()
+        elif action == 'get_monitored_contest':
+            return self.get_monitored_contest()
+        elif action == 'add_contest':
+            return self.add_contest()
+        elif action == 'delete_contest':
+            return self.delete_contest()
         elif action == 'get_user_info':
             return self.get_user_info()
         elif action == 'add_user':
@@ -29,6 +35,8 @@ class API_now_coder(MethodView):
             return self.contest_submission_update()
         elif action == 'contest_rank_update':
             return self.contest_rank_update()
+        elif action == 'get_contest_rank':
+            return self.get_contest_rank()
         else:
             return jsonify({"status": False, "message": "Invalid action"})
 
@@ -98,12 +106,10 @@ class API_now_coder(MethodView):
         return jsonify(msg)
 
     def contest_submission_update(self):
-        contest_id = int(request.args.get('contest_id'))
-        newest_submissions = self.now_coder.user_submissions_update()
+        newest_submissions = self.now_coder.contest_submission_update()
         msg = {
             "status": True,
             "success": False,
-            "contest_id": contest_id,
             "submissions": None
         }
         if newest_submissions:
@@ -112,16 +118,74 @@ class API_now_coder(MethodView):
         return jsonify(msg)
 
     def contest_rank_update(self):
-        contest_id = int(request.args.get('contest_id'))
-        rank_info = self.now_coder.user_submissions_update(contest_id)
+        rank_info = self.now_coder.contest_rank_update()
         msg = {
             "status": True,
             "success": False,
-            "contest_id": contest_id,
             "ranking": None
         }
         if rank_info:
-            msg["ranking"] = rank_info["ranking"]
+            msg["ranking"] = rank_info
             msg["success"] = True
         return jsonify(msg)
+
+    def get_contest_rank(self):
+        contest_id = request.args.get('contest_id')
+        contest_list = self.now_coder.get_contest_list()["contest"]
+        msg = {
+            "status": True,
+            "success": False,
+            "contest_info" : None, 
+            "contest_rank": None
+        }
+        for con in contest_list :
+            if str(con["contest_id"]) == str(contest_id):
+                msg["success"] = True
+                msg["contest_info"] = con
+                msg["contest_rank"] = self.now_coder.get_contest_rank(contest_id)
+                return jsonify(msg)
+        return jsonify(msg)
+
+    def get_monitored_contest(self):
+        msg = {
+            "status": True,
+            "contest_info": self.now_coder.get_contest_list()["contest"]
+        }
+        return jsonify(msg)
+    
+    def add_contest(self):
+        contest_id = request.args.get('contest_id')
+        contest_latest = self.now_coder.get_recent_contest()["contest"]
+        msg = {
+            "status": True,
+            "success": False,
+            "contest_info": None
+        }
+        for con in contest_latest:
+            if str(contest_id) == str(con["contest_id"]) :
+                msg["success"] = True
+                msg["contest_info"] = con
+                self.now_coder.add_contest(con)
+                return jsonify(msg)
+        return jsonify(msg)
+    
+    def delete_contest(self):
+        contest_id = request.args.get('contest_id')
+        contest_list = self.now_coder.get_contest_list()
+        msg = {
+            "status": True,
+            "success": False,
+            "contest_info": None
+        }
+        for con in contest_list["contest"]:
+            if con["contest_id"] == contest_id:
+                msg["success"] = True
+                msg["contest_info"] = con
+                self.now_coder.delete_contest(con)
+                return jsonify(msg)
+        return jsonify(msg)
+
+
+
+        
     

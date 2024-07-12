@@ -66,7 +66,7 @@ class crawl_nowcoder :
             for i in data : 
                 if int(i["startTime"]) < int(now_timestap) :
                     continue
-                contest_info.append(crawl_nowcoder_contest(i["contestId"], i["contestName"], i["startTime"], i["endTime"], i["link"]))
+                contest_info.append(crawl_nowcoder_contest(i["link"].split('/')[-1].split('?')[0], i["contestName"], i["startTime"], i["endTime"], i["link"]))
            
             if(datetime.datetime.now().month == 12) :
                 date = str(datetime.datetime.now().year + 1) + "-" + "01"
@@ -87,7 +87,7 @@ class crawl_nowcoder :
             for i in data : 
                 if int(i["startTime"]) < now_timestap :
                     continue
-                contest_info.append(crawl_nowcoder_contest(i["contestId"], i["contestName"], i["startTime"], i["endTime"], i["link"]))
+                contest_info.append(crawl_nowcoder_contest(i["link"].split('/')[-1].split('?')[0], i["contestName"], i["startTime"], i["endTime"], i["link"]))
             
             return contest_info
         except Exception as e:
