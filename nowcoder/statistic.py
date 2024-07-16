@@ -11,6 +11,13 @@ class statistic_nowcoder :
         }
         self.crawler = crawl_nowcoder(requests_header=header, requests_timeout=3)
 
+        self.user_example = {
+            "latest_timestamp" : "0",
+            "user_id" : "", 
+            "user_name" : "",
+            "submissions" : []
+        }
+
         self.user_info_locker = threading.Lock()
         self.user_submission_locker = {}
         self.locker_of_user_submission_locker = threading.Lock()
@@ -31,6 +38,7 @@ class statistic_nowcoder :
                 if f"{user['user_id']}" not in self.user_submission_locker :
                     self.user_submission_locker[f"{user['user_id']}"] = threading.Lock()
 
+        os.makedirs(f"./nowcoder/data/submission", exist_ok=True)
         for user in users_info["users"] : 
             # check if submission.json for each user exsist
             with self.user_submission_locker[f"{user['user_id']}"]:
@@ -39,24 +47,30 @@ class statistic_nowcoder :
                     pass
                 with open(file=submission_file, mode="r+") as file:
                     if file.read() == "" :
-                        with open(file="./nowcoder/data/submission/example.json", mode="r") as example :
-                            for line in example :
-                                file.write(line)
+                        json.dump(self.user_example, file, ensure_ascii=False, indent=4)
+
         with self.contest_monitor_locker :
             contest_file = "./nowcoder/data/contest.json"
             with open(file=contest_file, mode="r") as file:
-                    contest_info = json.load(file)
+                contest_info = json.load(file)
+
         for con in contest_info["contest"]:
             contest_id = con["contest_id"]
-            contest_dir = f"./nowcoder/data/contest/{contest_id}"
-            os.makedirs(contest_dir, exist_ok=True)
+            os.makedirs(f"./nowcoder/data/contest/{contest_id}", exist_ok=True)
 
             # check if contest rank locker exsist
             with self.locker_of_contest_rank_locker : 
                 if f"{contest_id}" not in self.contest_rank_locker :
                     self.contest_rank_locker[f"{contest_id}"] = threading.Lock()
-
-    def add_user(self, user_name, user_id):
+            with self.contest_rank_locker[f"{contest_id}"]:
+                rank_file = f"./nowcoder/data/contest/{contest_id}/rank.json"
+                with open(file=rank_file, mode="a") as file :
+                    pass
+                with open(file=rank_file, mode="r+") as file :
+                    if file.read() == "" :
+                        json.dump([], file, ensure_ascii=False, indent=4)
+                            
+    def add_user(self, user_name, user_id, is_team):
         # update user_info.json
         with self.user_info_locker :
             user_file = "./nowcoder/data/user_info.json"
@@ -68,7 +82,8 @@ class statistic_nowcoder :
         
             users_info["users"].append({
                 "user_id" : str(user_id),
-                "user_name" : str(user_name)
+                "user_name" : str(user_name),
+                "is_team" : is_team
             })
             with open(file=user_file, mode='w', encoding='utf-8') as json_file:
                 json.dump(users_info, json_file, ensure_ascii=False, indent=4)
@@ -84,9 +99,7 @@ class statistic_nowcoder :
                 pass
             with open(file=submission_file, mode="r+") as file:
                 if file.read() == "" :
-                    with open(file="./nowcoder/data/submission/example.json", mode="r") as example :
-                        for line in example :
-                            file.write(line)
+                    json.dump(self.user_example, file, ensure_ascii=False, indent=4)
   
         return True
 
@@ -115,7 +128,8 @@ class statistic_nowcoder :
 
     def get_user_submissions(self, user, latest_timestamp = 0) :
         newest_submissions = []
-
+        if user["is_team"] == True :
+            return newest_submissions
         # update user's submission.json
         with self.user_submission_locker[f"{user['user_id']}"] : 
             submission_file = f"./nowcoder/data/submission/{user['user_id']}.json"
@@ -155,9 +169,7 @@ class statistic_nowcoder :
                     pass
                 with open(file=submission_file, mode="r+") as file:
                     if file.read() == "" :
-                        with open(file="./nowcoder/data/submission/example.json", mode="r") as example :
-                            for line in example :
-                                file.write(line)
+                        json.dump(self.user_example, file, ensure_ascii=False, indent=4)
 
         def update_user_submission(user):
             submissions = self.get_user_submissions(user, latest_timestamp)
@@ -170,9 +182,8 @@ class statistic_nowcoder :
         
         return newest_submissions
 
-    def get_contest_submission(self, contest_id, user) :
+    def get_contest_submission(self, contest_id, user, all_submissions) :
         newest_submissions = []
-
         # update user's contest submission.json
         with self.contest_submission_locker[f"{contest_id}"][f"{user['user_id']}"]:
             submission_file = f"./nowcoder/data/contest/{contest_id}/{user['user_id']}.json"
@@ -180,21 +191,21 @@ class statistic_nowcoder :
                 submission_info = json.load(file)
             submission_info["user_id"] = user["user_id"]
             submission_info["user_name"] = user['user_name']
-            result = self.crawler.get_contest_submission_by_name(contest_id, user["user_name"], int(submission_info["latest_timestamp"]))
-            if len(result["submissions"]) != 0 : 
-                submission_info["latest_timestamp"] = result["submissions"][0].sub_time
-                for sub in reversed(result["submissions"]) : 
+            if len(all_submissions[user["user_id"]]) != 0 : 
+                for sub in reversed(all_submissions[user["user_id"]]) : 
+                    if int(sub.sub_time) <= int(submission_info["latest_timestamp"]):
+                        break
                     newest_submissions.append(sub.__dict__)
                     submission_info["submissions"].insert(0, sub.__dict__)
+                submission_info["latest_timestamp"] = all_submissions[user["user_id"]][-1].sub_time
             with open(file=submission_file, mode='w', encoding='utf-8') as json_file:
                 json.dump(submission_info, json_file, ensure_ascii=False, indent=4)
-
         return newest_submissions
         
 
     def contest_submission_update(self):
         newest_submissions = []
-
+        
         # read user info contest info
         contest_info = self.get_contest_list()
         users_info = self.get_user_list()
@@ -202,8 +213,7 @@ class statistic_nowcoder :
         for con in contest_info["contest"]:
             contest_id = con["contest_id"]
             # check if contest dir exsist
-            contest_dir = f"./nowcoder/data/contest/{contest_id}"
-            os.makedirs(contest_dir, exist_ok=True)
+            os.makedirs(f"./nowcoder/data/contest/{contest_id}", exist_ok=True)
 
             # check if contest locker for each user exsist
             with self.locker_of_contest_submission_locker :
@@ -212,6 +222,12 @@ class statistic_nowcoder :
                 for user in users_info["users"] : 
                     if f"{user['user_id']}" not in self.contest_submission_locker[f"{contest_id}"] :
                         self.contest_submission_locker[f"{contest_id}"][f"{user['user_id']}"] = threading.Lock()
+            submissions = self.crawler.get_contest_submission(contest_id)["submissions"]
+            all_submissions = {}
+            for sub in submissions:
+                if sub.user_id not in all_submissions:
+                    all_submissions[sub.user_id] = []
+                all_submissions[sub.user_id].append(sub)
 
             for user in users_info["users"] : 
                 # check if contest submission.json for each user exsist
@@ -221,12 +237,10 @@ class statistic_nowcoder :
                         pass
                     with open(file=submission_file, mode="r+") as file :
                         if file.read() == "" :
-                            with open(file="./nowcoder/data/submission/example.json", mode="r") as example :
-                                for line in example :
-                                    file.write(line)
+                            json.dump(self.user_example, file, ensure_ascii=False, indent=4)
 
             def update_user_submission(user):
-                submissions = self.get_contest_submission(contest_id, user)
+                submissions = self.get_contest_submission(contest_id, user, all_submissions)
                 if submissions:
                     newest_submissions.extend(submissions)
             
@@ -255,11 +269,11 @@ class statistic_nowcoder :
         # read user info contest info
         contest_info = self.get_contest_list()
         users_info = self.get_user_list()
+        change = False
 
         for con in contest_info["contest"]:
             contest_id = con["contest_id"]
-            contest_dir = f"./nowcoder/data/contest/{contest_id}"
-            os.makedirs(contest_dir, exist_ok=True)
+            os.makedirs(f"./nowcoder/data/contest/{contest_id}", exist_ok=True)
 
             # check if contest rank locker exsist
             with self.locker_of_contest_rank_locker : 
@@ -278,9 +292,28 @@ class statistic_nowcoder :
 
             with self.contest_rank_locker[f"{contest_id}"]:
                 rank_file = f"./nowcoder/data/contest/{contest_id}/rank.json"
+                with open(file=rank_file, mode="r") as json_file:
+                    last_rank = json.load(json_file) 
+                if not change:
+                    for now in ranking[f"{contest_id}"] :
+                        found = False
+                        for last in last_rank:
+                            if now["user_id"] == last["user_id"]:
+                                found = True
+                                if now["accept_cnt"] != last["accept_cnt"] :
+                                    change = True
+                                    break
+                        if change :
+                            break
+                        if not found:
+                            change = True
+                            break
                 with open(file=rank_file, mode='w', encoding='utf-8') as json_file:
                     json.dump(ranking[f"{contest_id}"], json_file, ensure_ascii=False, indent=4)
-        return ranking
+        return {
+            "change" : change,
+            "ranking": ranking
+        }
         
     def get_recent_contest(self) :
         return {

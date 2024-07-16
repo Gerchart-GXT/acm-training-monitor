@@ -1,24 +1,39 @@
 {
     "users": [
         {
-            "user_id": "848183624",
-            "user_name": "yydtq"
+            "user_id": "154835717",
+            "user_name": "25時、ナイトコードで",
+            "is_team": true
         },
         {
-            "user_id": "988636320",
-            "user_name": "Gerchart_GXT"
+            "user_id": "50673140",
+            "user_name": "可以组一辈子acm队吗",
+            "is_team": true
         },
         {
-            "user_id": "880380038",
-            "user_name": "Heltion"
+            "user_id": "807919463",
+            "user_name": "铁牌物语Remake",
+            "is_team": true
         },
         {
-            "user_id": "382743557",
-            "user_name": "thisislike_fan"
+            "user_id": "100518191",
+            "user_name": "8/24，赛博霍金肘击电子东雪莲0721次",
+            "is_team": true
         },
         {
-            "user_id": "110",
-            "user_name": "全栈工程师(泉栈)"
+            "user_id": "66487574",
+            "user_name": "不定积分",
+            "is_team": true
+        },
+        {
+            "user_id": "769511718",
+            "user_name": "理塘王吃满0721次罚时后原神启动了",
+            "is_team": true
+        },
+        {
+            "user_id": "783192247",
+            "user_name": "wa要交税，ac也要交税",
+            "is_team": true
         }
     ]
 }

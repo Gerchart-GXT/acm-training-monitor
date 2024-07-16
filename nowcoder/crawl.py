@@ -100,12 +100,35 @@ class crawl_nowcoder :
         if soup.select("div.null") or r.history:
             return None   
         user_name = soup.select("div.nk-container div.coder-info-detail a")[0].text
+        is_team = soup.select("div.nk-container div.coder-info-detail a")[1].text.strip() == "团队成员"
         user_rank = soup.select("div.my-state-main div.my-state-item div")[0].text
         return {
             "user_id" : user_id,
             "user_name" : user_name,
+            "is_team" : is_team,
             "user_rank" : user_rank
         }
+    
+    def get_user_id_by_name(self, user_name):
+        result = {
+            "user_id" : None,
+            "user_name" : str(user_name)
+        }
+        url = self.urls["user_info"]["search"]
+        params = {
+            "searchUserName" : user_name
+        }
+        r = requests.get(url=url, headers=self.requests_header, timeout=self.requests_timeout, params=params)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        users_table = soup.select("table.rating-data tbody tr")
+        if not users_table :
+            return result
+        user_info = users_table[0].select("td")
+        result_user_name = user_info[1].select("span")[0].text
+        if result_user_name != user_name:
+            return result
+        result["user_id"] = user_info[1].select("a")[0].get("href").split("/")[-1]
+        return result
 
     
     def get_user_submission(self, user_id, user_name, latest_timestamp=0) :
@@ -165,50 +188,32 @@ class crawl_nowcoder :
         except Exception as e:
             print(e)
         
-    def get_contest_submission_by_name(self, contest_id, search_name, latest_timestamp=0) :
+    def get_contest_submission(self, contest_id) :
         try : 
             result = {
-                "search_name" : str(search_name),
-                "submissions" : []
+                "contest_id" : str(contest_id),
+                "submissions" : None
             }
             url = self.urls["contest"]["submission"]
             params = {
-                "id" : contest_id,
-                "pageSize" : 50,
-                "page" : 1,
-                "searchUserName" : search_name
+                "currentContestId" : contest_id,
+                "contestList" : contest_id
             }
             r = requests.get(url=url, headers=self.requests_header, params=params, timeout=self.
             requests_timeout)
             if r.status_code != 200:
                 raise crawl_nowcoder_exception(f"Failed to retrieve the page. Status code: {r.status_code}")
-
-            page_cnt = r.json()["data"]["basicInfo"]["pageCount"]
-
-            for page_id in range(1, page_cnt + 1) :
-                params = {
-                    "id" : contest_id,
-                    "pageSize" : 50,
-                    "page" : page_id,
-                    "searchUserName" : search_name
-                }
-                r = requests.get(url=url, headers=self.requests_header, params=params, timeout=self.requests_timeout)
-                if r.status_code != 200:
-                    raise crawl_nowcoder_exception(f"Failed to retrieve the page. Status code: {r.status_code}")
-                for sub in r.json()["data"]["data"] : 
-                    user_name = sub["userName"]
-                    user_id = sub["userId"]
-                    sub_id = sub["submissionId"]
-                    pro_id = sub["problemId"]
-                    pro_name = ""
-                    status = sub["statusMessage"]
-                    sub_time = sub["submitTime"]
-                    if int(sub_time) <= int(latest_timestamp) : 
-                        return result
-                    if status == "正在判题" :
-                        continue
-                    result["submissions"].append(crawl_nowcoder_submission(user_name, user_id, sub_id, pro_id, pro_name, status, sub_time))
-                    
+            pro_info = r.json()["data"]["problemData"]
+            pro_id_to_name = {}
+            for pro in pro_info:
+                pro_id_to_name[str(pro["problemId"])] = r.json()["data"]["submitDataList"][0]["basicInfo"]["name"] + " : " + pro["index"] + ". " + pro["title"]
+            
+            user_info = r.json()["data"]["submitDataList"][0]["signUpUsers"]
+            user_id_to_name = {}
+            for user in user_info:
+                user_id_to_name[user["uid"]] = user["name"]
+                
+            result["submissions"] = [crawl_nowcoder_submission(user_name=user_id_to_name[sub["uid"]], user_id=sub["uid"], sub_id=sub["submissionId"], sub_time=sub["submitTime"], status=sub["rightCaseRate"], pro_id=sub["problemId"], pro_name=pro_id_to_name[str(sub["problemId"])]) for sub in r.json()["data"]["submitDataList"][0]["submissions"]]
             return result
             
         except Exception as e:

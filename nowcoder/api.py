@@ -27,6 +27,8 @@ class API_now_coder(MethodView):
             return self.add_user()
         elif action == 'delete_user':
             return self.delete_user()
+        elif action == 'get_user_id_by_name':
+            return self.get_user_id_by_name()
         elif action == 'get_monitored_user':
             return self.get_monitored_user()
         elif action == 'user_submissions_update':
@@ -67,8 +69,7 @@ class API_now_coder(MethodView):
         }
         if not user_info:
             return jsonify(msg)
-        self.now_coder.add_user(user_info["user_name"], user_info["user_id"])
-        msg["success"] = True
+        msg["success"] = self.now_coder.add_user(user_info["user_name"], user_info["user_id"], user_info["is_team"])
         return jsonify(msg)
     
     def delete_user(self):
@@ -85,6 +86,19 @@ class API_now_coder(MethodView):
         msg["success"] = self.now_coder.delete_user(user_info["user_name"], user_info["user_id"])
         return jsonify(msg)
     
+    def get_user_id_by_name(self) :
+        user_name = request.args.get('user_name')
+        msg = {
+            "status": True,
+            "success": False,
+            "user_info": None
+        }
+        user_info = self.now_coder.crawler.get_user_id_by_name(user_name)
+        if user_info["user_id"]:
+            msg["success"] = True
+            msg["user_info"] = user_info
+        return jsonify(msg)
+
     def get_monitored_user(self) :
         msg = {
             "status": True,
@@ -122,11 +136,14 @@ class API_now_coder(MethodView):
         msg = {
             "status": True,
             "success": False,
+            "change" : False,
             "ranking": None
         }
         if rank_info:
-            msg["ranking"] = rank_info
             msg["success"] = True
+            msg["ranking"] = rank_info["ranking"]
+            msg["change"] = rank_info["change"]
+
         return jsonify(msg)
 
     def get_contest_rank(self):
