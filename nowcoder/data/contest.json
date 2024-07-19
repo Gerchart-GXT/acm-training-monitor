@@ -1,12 +1,5 @@
 {
     "contest": [
-        {
-            "contest_id": "81596",
-            "contest_name": "2024牛客暑期多校训练营1",
-            "start_time": "2024-07-16 12:00:00+08:00",
-            "end_time": "2024-07-16 17:00:00+08:00",
-            "contest_link": "https://ac.nowcoder.com/acm/contest/81596",
-            "length": "300.0"
-        }
+        
     ]
 }

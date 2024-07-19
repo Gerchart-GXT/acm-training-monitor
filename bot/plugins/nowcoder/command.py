@@ -1,5 +1,44 @@
 from nonebot import on_command, CommandSession
 import requests
+import pytz
+import datetime
+
+
+# @on_command('test')
+# async def asfsdfdssdfds(session: CommandSession):
+#     params = {
+#         "action" : "get_monitored_contest",
+#     }
+#     r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
+#     if r.status_code != 200:
+#         return
+#     if r.json()["status"] != True :
+#         return 
+#     contests = r.json()["contest_info"]
+#     for contest in contests:
+#         params = {
+#             "action" : "contest_rank_update",
+#             "contest_id" : contest["contest_id"]
+#         }
+#         r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=60)
+#         if r.status_code != 200:
+#             return 
+#         if r.json()["status"] != True :
+#             return 
+#         if r.json()["success"] != True:
+#             return
+#         if r.json()["change"] != True:
+#             continue
+
+#         rank_info = r.json()["ranking"]
+#         result = f'<--Contest: {contest["contest_name"]}-->\n'
+#         for rk in sorted(rank_info, key=lambda x: int(x["ranking"])):
+#             if str(rk["ranking"]) == "-1":
+#                 continue
+#             result = result + f'User Name: {rk["user_name"]}\nRanking: {"Not Attend" if str(rk["ranking"]) == "-1" else rk["ranking"]}\nAccept Count: {rk["accept_cnt"]}\n\n'
+#         await session.send(result)
+#     return 
+
 
 @on_command('help')
 async def help(session: CommandSession):
@@ -24,24 +63,6 @@ async def help(session: CommandSession):
     )
     await session.send(help_text)
 
-@on_command('nc--contest')
-async def get_latest_contest(session: CommandSession):
-    params = {
-        "action" : "get_latest_contest",
-    }
-    await session.send("Getting Nowcoder latest contest...")
-    r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
-    if r.status_code != 200:
-        await session.send("Server connect erro!")
-        return
-    if r.json()["status"] != True :
-        await session.send("Nowcoder server erro!")
-        return 
-    contest = r.json()["contest"]
-    result = "<-Coming Contests->\n"
-    for con in contest :
-        result = result + f'Contest Name: {con["contest_name"]}\nLink: {con["contest_link"]}\nStart time: {con["start_time"]}\nEnd time: {con["end_time"]}\nLength: {(con["length"])} mins\nContest ID: {con["contest_id"]}\n\n'
-    await session.send(result)
 
 @on_command('nc--add-contest')
 async def add_contest(session: CommandSession):
@@ -117,19 +138,21 @@ async def contest_rank_update(session: CommandSession):
     result = f"<--Contest: {contest_info['contest_name']}-->\n"
     
     for rk in rank_info :
+        if str(rk["ranking"]) == "-1":
+            continue
         result = result + f'User Name: {rk["user_name"]}\nRanking: {"Not Attend" if str(rk["ranking"]) == "-1" else rk["ranking"]}\n Accept Count: {rk["accept_cnt"]}\n\n'
     await session.send(result)
-    
 
 @on_command('nc--add-user')
 async def add_user(session: CommandSession):
-    user_id = session.current_arg_text.strip()
-    if not user_id :
-        await session.send("Please input user ID!")
+    user_name = session.current_arg_text.strip()
+    if not user_name :
+        await session.send("Please input user ID/Name!")
         return
     params = {
         "action" : "add_user",
-        "user_id" : int(user_id)
+        "user_id" : -1,
+        "user_name": user_name
     }
     r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
     if r.status_code != 200:
@@ -138,22 +161,39 @@ async def add_user(session: CommandSession):
     if r.json()["status"] != True :
         await session.send("Nowcoder server erro!")
         return 
-    if r.json()["success"] != True:
-        await session.send(f"user_id : {user_id} Not Found!")
+    if r.json()["success"] == True:
+        user_info = r.json()["user_info"]
+        await session.send(f"NowCoder add user : {user_info['user_name']}(used id : {user_info['user_id']}, rank : {user_info['user_rank']}) successfully!")
         return
-    user_info = r.json()["user_info"]
-    await session.send(f"NowCoder add user : {user_info['user_name']}(used id : {user_info['user_id']}, rank : {user_info['user_rank']}) successfully!")
-    
+    params = {
+        "action" : "add_user",
+        "user_id" : user_name,
+        "user_name": ""
+    }
+    r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
+    if r.status_code != 200:
+        await session.send("Server connect erro!")
+        return
+    if r.json()["status"] != True :
+        await session.send("Nowcoder server erro!")
+        return 
+    if r.json()["success"] == True:
+        user_info = r.json()["user_info"]
+        await session.send(f"NowCoder add user : {user_info['user_name']}(used id : {user_info['user_id']}, rank : {user_info['user_rank']}) successfully!")
+        return
+    await session.send(f"NowCoder add user : {user_name} Erro! User not exsist or never participate any contest with last 6 mouths.")
 
+    
 @on_command('nc--delete-user')
 async def delete_user(session: CommandSession):
-    user_id = session.current_arg_text.strip()
-    if not user_id :
-        await session.send("Please input user ID!")
+    user_name = session.current_arg_text.strip()
+    if not user_name :
+        await session.send("Please input user ID/Name!")
         return
     params = {
         "action" : "delete_user",
-        "user_id" : int(user_id)
+        "user_id" : -1,
+        "user_name": user_name
     }
     r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
     if r.status_code != 200:
@@ -162,21 +202,14 @@ async def delete_user(session: CommandSession):
     if r.json()["status"] != True :
         await session.send("Nowcoder server erro!")
         return 
-    if r.json()["success"] != True:
-        await session.send(f"user id : {user_id} Not Added!")
-        return 
-    user_info = r.json()["user_info"]
-    await session.send(f"NowCoder delete user : {user_info['user_name']}(used id : {user_info['user_id']}, rank : {user_info['user_rank']}) successfully !")
-
-@on_command('nc--user-info')
-async def get_user_info(session: CommandSession):
-    user_name = session.current_arg_text.strip()
-    if not user_name :
-        await session.send("Please input user name!")
+    if r.json()["success"] == True:
+        user_info = r.json()["user_info"]
+        await session.send(f"NowCoder delete user : {user_info['user_name']}(used id : {user_info['user_id']}, rank : {user_info['user_rank']}) successfully!")
         return
     params = {
-        "action" : "get_user_id_by_name",
-        "user_name" : user_name
+        "action" : "delete_user",
+        "user_id" : user_name,
+        "user_name": ""
     }
     r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
     if r.status_code != 200:
@@ -185,11 +218,11 @@ async def get_user_info(session: CommandSession):
     if r.json()["status"] != True :
         await session.send("Nowcoder server erro!")
         return 
-    if r.json()["success"] != True:
-        await session.send(f"user : {user_name} Not Found Or Never participate any contests within past six months!\n Please obtain ID manually.")
-        return 
-    user_info = r.json()["user_info"]
-    await session.send(f"NowCoder: {user_info['user_name']} used id : {user_info['user_id']}")
+    if r.json()["success"] == True:
+        user_info = r.json()["user_info"]
+        await session.send(f"NowCoder delete user : {user_info['user_name']}(used id : {user_info['user_id']}, rank : {user_info['user_rank']}) successfully!")
+        return
+    await session.send(f"NowCoder delete user : {user_name} Erro! User may not be added.")
 
 @on_command('nc--user-list')
 async def get_monitored_user(session: CommandSession):
@@ -204,13 +237,18 @@ async def get_monitored_user(session: CommandSession):
         await session.send("Nowcoder server erro!")
         return 
     user_info = r.json()["user_info"]
-    result = "<-User List->\n"
+    result = "<-NowCoder Users List->\n"
     for user in user_info :
-        result = result + f"{user['user_name']}\n"
+        result = result + f"{user['user_name']}"
+        if user["is_team"] :
+            result = result + "(Team)"
+        result = result + "\n"
+
     await session.send(result)
 
+
 @on_command('nc--contest-list')
-async def get_monitored_contest(session: CommandSession):
+async def contest_update(session: CommandSession):
     params = {
         "action" : "get_monitored_contest",
     }
@@ -221,12 +259,63 @@ async def get_monitored_contest(session: CommandSession):
     if r.json()["status"] != True :
         await session.send("Nowcoder server erro!")
         return 
-    contest_info = r.json()["contest_info"]
-    result = "<-Contest List->\n"
-    for con in contest_info :
+    
+    monitored_contest = r.json()["contest_info"]
+    shanghai_tz = pytz.timezone('Asia/Shanghai')
+    current_time = datetime.datetime.now(shanghai_tz)
+    finished_contest = [
+        contest for contest in monitored_contest
+        if current_time >= (datetime.datetime.fromisoformat(contest['end_time']))
+    ]
+    for contest in finished_contest:
+        params = {
+            "action" : "delete_contest",
+            "contest_id" : int(contest["contest_id"])
+        }
+        requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
+        if r.status_code != 200:
+            await session.send("Server connect erro!")
+            return
+        if r.json()["status"] != True :
+            await session.send("Nowcoder server erro!")
+            return 
+
+    params = {
+        "action" : "get_latest_contest",
+    }
+    r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
+    if r.status_code != 200:
+        await session.send("Server connect erro!")
+        return
+    if r.json()["status"] != True :
+        await session.send("Nowcoder server erro!")
+        return 
+    latest_contest = r.json()["contest"]
+    for contest in latest_contest:
+        params = {
+            "action" : "add_contest",
+            "contest_id" : int(contest["contest_id"])
+        }
+        requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
+        if r.status_code != 200:
+            await session.send("Server connect erro!")
+            return
+        if r.json()["status"] != True :
+            await session.send("Nowcoder server erro!")
+            return 
+
+    params = {
+        "action" : "get_monitored_contest",
+    }
+    r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
+    if r.status_code != 200:
+        await session.send("Server connect erro!")
+        return
+    if r.json()["status"] != True :
+        await session.send("Nowcoder server erro!")
+        return 
+
+    result = "<-NowCoder Contests list>\n"
+    for con in latest_contest :
         result = result + f'Contest Name: {con["contest_name"]}\nLink: {con["contest_link"]}\nStart time: {con["start_time"]}\nEnd time: {con["end_time"]}\nLength: {(con["length"])} mins\nContest ID: {con["contest_id"]}\n\n'
     await session.send(result)
-
-
-
-

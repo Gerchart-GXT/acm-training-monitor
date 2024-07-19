@@ -6,15 +6,17 @@ from nowcoder.statistic import statistic_nowcoder
 from flask.views import MethodView
 from flask import jsonify, request
 
-class API_now_coder(MethodView):
+class API_Nowcoder(MethodView):
     def __init__(self):
         super().__init__()
-        self.now_coder = statistic_nowcoder()
+        self.nowcoder = statistic_nowcoder(10)
 
     def get(self):
         action = request.args.get('action')
         if action == 'get_latest_contest':
             return self.get_latest_contest()
+        elif action == 'get_contest_datas':
+            return self.get_contest_datas()
         elif action == 'get_monitored_contest':
             return self.get_monitored_contest()
         elif action == 'add_contest':
@@ -27,8 +29,6 @@ class API_now_coder(MethodView):
             return self.add_user()
         elif action == 'delete_user':
             return self.delete_user()
-        elif action == 'get_user_id_by_name':
-            return self.get_user_id_by_name()
         elif action == 'get_monitored_user':
             return self.get_monitored_user()
         elif action == 'user_submissions_update':
@@ -48,67 +48,90 @@ class API_now_coder(MethodView):
     def get_latest_contest(self):
         msg = {
             "status": True,
-            "contest": self.now_coder.get_recent_contest()["contest"]
+            "contest": self.nowcoder.get_recent_contest()["contest"]
+        }
+        return jsonify(msg)
+
+    def get_contest_datas(self):
+        contest_id = request.args.get('contest_id')
+        msg = {
+            "status":True,
+            "contest_datas": self.nowcoder.crawler.get_contest_datas(contest_id)
         }
         return jsonify(msg)
 
     def get_user_info(self, user_id):
         msg = {
             "status": True,
-            "user_info": self.now_coder.crawler.get_user_info(user_id)
+            "user_info": self.nowcoder.crawler.get_user_info(user_id)
         }
         return jsonify(msg)
 
     def add_user(self):
         user_id = request.args.get('user_id')
-        user_info = self.now_coder.crawler.get_user_info(user_id)
+        user_name = request.args.get('user_name').strip('"')
         msg = {
             "status": True,
             "success": False,
-            "user_info": user_info
+            "user_info": {
+                "user_name": user_name,
+                "user_id": user_id
+            }
         }
-        if not user_info:
+        if str(user_id) == "-1" :
+            res = self.nowcoder.crawler.get_user_id_by_name(user_name) 
+            msg["user_info"] = {
+                "user_name": res["user_name"],
+                "user_id": res["user_id"],
+            }
+            if msg["user_info"]["user_id"] == None :
+                return jsonify(msg)
+            
+        msg["user_info"] = self.nowcoder.crawler.get_user_info(msg["user_info"]["user_id"])
+
+        if not msg["user_info"]:
             return jsonify(msg)
-        msg["success"] = self.now_coder.add_user(user_info["user_name"], user_info["user_id"], user_info["is_team"])
+        
+        msg["success"] = self.nowcoder.add_user(msg["user_info"]["user_name"], msg["user_info"]["user_id"], msg["user_info"]["is_team"])
         return jsonify(msg)
     
     def delete_user(self):
         user_id = request.args.get('user_id')
-        user_info = self.now_coder.crawler.get_user_info(user_id)
+        user_name = request.args.get('user_name').strip('"')
         msg = {
             "status": True,
             "success": False,
-            "user_info": user_info
+            "user_info": {
+                "user_name": user_name,
+                "user_id": user_id
+            }
         }
-        if not user_info:
+        if str(user_id) == "-1" :
+            res = self.nowcoder.crawler.get_user_id_by_name(user_name) 
+            msg["user_info"] = {
+                "user_name": res["user_name"],
+                "user_id": res["user_id"],
+            }
+            if msg["user_info"]["user_id"] == None :
+                return jsonify(msg)
+            
+        msg["user_info"] = self.nowcoder.crawler.get_user_info(msg["user_info"]["user_id"])
+
+        if not msg["user_info"]:
             return jsonify(msg)
         
-        msg["success"] = self.now_coder.delete_user(user_info["user_name"], user_info["user_id"])
-        return jsonify(msg)
-    
-    def get_user_id_by_name(self) :
-        user_name = request.args.get('user_name')
-        msg = {
-            "status": True,
-            "success": False,
-            "user_info": None
-        }
-        user_info = self.now_coder.crawler.get_user_id_by_name(user_name)
-        if user_info["user_id"]:
-            msg["success"] = True
-            msg["user_info"] = user_info
+        msg["success"] = self.nowcoder.delete_user(msg["user_info"]["user_name"], msg["user_info"]["user_id"])
         return jsonify(msg)
 
     def get_monitored_user(self) :
         msg = {
             "status": True,
-            "user_info": self.now_coder.get_user_list()["users"]
+            "user_info": self.nowcoder.get_user_list()["users"]
         }
         return jsonify(msg)
 
-
     def user_submissions_update(self):
-        newest_submissions = self.now_coder.user_submissions_update(int(request.args.get('latest_timestamp')))
+        newest_submissions = self.nowcoder.user_submissions_update(int(request.args.get('latest_timestamp')))
         msg = {
             "status": True,
             "success": False,
@@ -120,7 +143,8 @@ class API_now_coder(MethodView):
         return jsonify(msg)
 
     def contest_submission_update(self):
-        newest_submissions = self.now_coder.contest_submission_update()
+        contest_id = request.args.get("contest_id")
+        newest_submissions = self.nowcoder.contest_submission_update(contest_id)
         msg = {
             "status": True,
             "success": False,
@@ -132,7 +156,8 @@ class API_now_coder(MethodView):
         return jsonify(msg)
 
     def contest_rank_update(self):
-        rank_info = self.now_coder.contest_rank_update()
+        contest_id = request.args.get("contest_id")
+        rank_info = self.nowcoder.contest_rank_update(contest_id)
         msg = {
             "status": True,
             "success": False,
@@ -143,12 +168,11 @@ class API_now_coder(MethodView):
             msg["success"] = True
             msg["ranking"] = rank_info["ranking"]
             msg["change"] = rank_info["change"]
-
         return jsonify(msg)
 
     def get_contest_rank(self):
         contest_id = request.args.get('contest_id')
-        contest_list = self.now_coder.get_contest_list()["contest"]
+        contest_list = self.nowcoder.get_contest_list()["contest"]
         msg = {
             "status": True,
             "success": False,
@@ -159,47 +183,49 @@ class API_now_coder(MethodView):
             if str(con["contest_id"]) == str(contest_id):
                 msg["success"] = True
                 msg["contest_info"] = con
-                msg["contest_rank"] = self.now_coder.get_contest_rank(contest_id)
+                msg["contest_rank"] = self.nowcoder.get_contest_rank(contest_id)
                 return jsonify(msg)
         return jsonify(msg)
 
     def get_monitored_contest(self):
         msg = {
             "status": True,
-            "contest_info": self.now_coder.get_contest_list()["contest"]
+            "contest_info": self.nowcoder.get_contest_list()["contest"]
         }
         return jsonify(msg)
     
     def add_contest(self):
         contest_id = request.args.get('contest_id')
-        contest_latest = self.now_coder.get_recent_contest()["contest"]
+        contest_info = self.nowcoder.crawler.get_contest_datas(contest_id)["contest_info"]
         msg = {
             "status": True,
             "success": False,
-            "contest_info": None
+            "contest_info": contest_info
         }
-        for con in contest_latest:
-            if str(contest_id) == str(con["contest_id"]) :
-                msg["success"] = True
-                msg["contest_info"] = con
-                self.now_coder.add_contest(con)
-                return jsonify(msg)
+        if not contest_info:
+            return jsonify(msg)
+        msg = {
+            "status": True,
+            "success": self.nowcoder.add_contest(contest_info),
+            "contest_info": contest_info
+        }
         return jsonify(msg)
     
     def delete_contest(self):
         contest_id = request.args.get('contest_id')
-        contest_list = self.now_coder.get_contest_list()
+        contest_info = self.nowcoder.crawler.get_contest_datas(contest_id)["contest_info"]
         msg = {
             "status": True,
             "success": False,
-            "contest_info": None
+            "contest_info": contest_info
         }
-        for con in contest_list["contest"]:
-            if con["contest_id"] == contest_id:
-                msg["success"] = True
-                msg["contest_info"] = con
-                self.now_coder.delete_contest(con)
-                return jsonify(msg)
+        if not contest_info:
+            return jsonify(msg)
+        msg = {
+            "status": True,
+            "success": self.nowcoder.delete_contest(contest_info),
+            "contest_info": contest_info
+        }
         return jsonify(msg)
 
 
