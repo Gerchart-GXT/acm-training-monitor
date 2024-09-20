@@ -44,22 +44,19 @@ import datetime
 async def help(session: CommandSession):
     help_text = (
         "Commands format:\n"
-        "[commend <params>...]\n"
+        "[command <params>...]\n"
         "\n"
         "Available commands:\n"
         "- [help]: Show this help message\n"
         "\n"
         "Nowcoder Commands:\n"
-        "- [nc--user-info <user_name>]: Get an Nowcoder user(team)'s information, especially the user ID, used for the following commands)\n"
-        "\n"
-        "- [nc--add-user <user_id>]: Add a Nowcoder user(team)\n"
-        "- [nc--delete-user <user_id>]: Delete a Nowcoder user(team)\n"
-        "- [nc--user-list]: Get the list of monitored Nowcoder user(team)\n"
-        "- [nc--contest]: Get the latest Nowcoder contests\n"
-        "- [nc--add-contest <contest_id>]: Add a Monitored Nowcoder contest\n"
-        "- [nc--delete-contest <contest_id>]: Delete a Monitored Nowcoder contest\n"
-        "- [nc--contest-list]: Get the list of monitored Nowcoder contests\n"
-        "- [nc--contest-rank <contest_id>]: Get the rank of a Monitored Nowcoder contest\n"
+        "- [nc--add-user <user_id/user_name>]: Add a Nowcoder user/team\n"
+        "- [nc--delete-user <user_id/user_name>]: Delete a Nowcoder user/team\n"
+        "- [nc--user-list]: Get the list of monitored Nowcoder users/teams\n"
+        "- [nc--contest-list]: Get the latest Nowcoder contests, and delete monitored Nowcoder contests if finished\n"
+        "- [nc--add-contest <contest_id>]: Add a monitored Nowcoder contest\n"
+        "- [nc--delete-contest <contest_id>]: Delete a monitored Nowcoder contest\n"
+        "- [nc--contest-rank <contest_id>]: Get the rank of a monitored Nowcoder contest\n"
     )
     await session.send(help_text)
 

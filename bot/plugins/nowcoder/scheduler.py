@@ -6,11 +6,11 @@ import pytz
 from nonebot import on_command, CommandSession
 
 
-rank_info_group = [947400127]
-submission_info_group = [947400127]
-# rank_info_group = [788384992, 881680835]
-# submission_info_group = [788384992, 881680835]
-init_timestamp = "20240716000000"
+# rank_info_group = [947400127]
+# submission_info_group = [947400127]
+rank_info_group = [788384992, 881680835]
+submission_info_group = [788384992, 881680835]
+init_timestamp = "20240601000000"
 
 user_submissions_update_locker = asyncio.Lock()
 
@@ -65,7 +65,8 @@ async def user_submissions_update():
                     await nonebot.get_bot().send_group_msg(group_id=gp,message=result)
                 result = "Nowcoder submission:\n"
         if result != "Nowcoder submission:\n":
-            await nonebot.get_bot().send_group_msg(group_id=gp,message=result)
+            for gp in submission_info_group :
+                await nonebot.get_bot().send_group_msg(group_id=gp,message=result)
 
 contest_submissions_update_locker = asyncio.Lock()
 
@@ -108,7 +109,8 @@ async def contest_submissions_update():
                         await nonebot.get_bot().send_group_msg(group_id=gp,message=result)
                     result = "Nowcoder Contest Submission:\n"
             if result != "Nowcoder Contest Submission:\n":
-                await nonebot.get_bot().send_group_msg(group_id=gp,message=result)
+                for gp in submission_info_group :
+                    await nonebot.get_bot().send_group_msg(group_id=gp,message=result)
 
 contest_rank_update_locker = asyncio.Lock()
 
@@ -120,7 +122,7 @@ async def contest_rank_update():
         params = {
             "action" : "get_monitored_contest",
         }
-        r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=10)
+        r = requests.get(url="http://127.0.0.1:6060/api/nowcoder", params=params, timeout=60)
         if r.status_code != 200:
             return
         if r.json()["status"] != True :
@@ -141,11 +143,13 @@ async def contest_rank_update():
             if r.json()["change"] != True:
                 continue
             rank_info = r.json()["ranking"]
-
+            has_changed = False
             result = f"<--Contest: {contest['contest_name']}-->\n"
             for rk in sorted(rank_info, key=lambda x: int(x["ranking"])):
                 if str(rk["ranking"]) == "-1":
                     continue
+                has_changed = True
                 result = result + f'User Name: {rk["user_name"]}\nRanking: {"Not Attend" if str(rk["ranking"]) == "-1" else rk["ranking"]}\nAccept Count: {rk["accept_cnt"]}\n\n'
-            for gp in rank_info_group :
-                await nonebot.get_bot().send_group_msg(group_id=gp,message=result)
+            if has_changed :
+                for gp in rank_info_group :
+                    await nonebot.get_bot().send_group_msg(group_id=gp,message=result)

@@ -1,5 +1,174 @@
 {
     "users": [
-
+        {
+            "user_id": "154835717",
+            "user_name": "25時、ナイトコードで",
+            "is_team": true
+        },
+        {
+            "user_id": "50673140",
+            "user_name": "可以组一辈子acm队吗",
+            "is_team": true
+        },
+        {
+            "user_id": "807919463",
+            "user_name": "铁牌物语Remake",
+            "is_team": true
+        },
+        {
+            "user_id": "100518191",
+            "user_name": "8/24，赛博霍金肘击电子东雪莲0721次",
+            "is_team": true
+        },
+        {
+            "user_id": "66487574",
+            "user_name": "不定积分",
+            "is_team": true
+        },
+        {
+            "user_id": "769511718",
+            "user_name": "理塘王吃满0721次罚时后原神启动了",
+            "is_team": true
+        },
+        {
+            "user_id": "783192247",
+            "user_name": "wa要交税，ac也要交税",
+            "is_team": true
+        },
+        {
+            "user_id": "277762748",
+            "user_name": "hhu_21_付宏磊",
+            "is_team": false
+        },
+        {
+            "user_id": "373666024",
+            "user_name": "Hurrikale",
+            "is_team": false
+        },
+        {
+            "user_id": "777927609",
+            "user_name": "CommandBlock",
+            "is_team": false
+        },
+        {
+            "user_id": "651833067",
+            "user_name": "HHU_22_张天浩",
+            "is_team": false
+        },
+        {
+            "user_id": "427491708",
+            "user_name": "hhu_22_ljt",
+            "is_team": false
+        },
+        {
+            "user_id": "951253768",
+            "user_name": "HHU_22_杜泽恩",
+            "is_team": false
+        },
+        {
+            "user_id": "767213521",
+            "user_name": "HHU_22_wyr",
+            "is_team": false
+        },
+        {
+            "user_id": "149367560",
+            "user_name": "remain11",
+            "is_team": false
+        },
+        {
+            "user_id": "949733577",
+            "user_name": "L1NG_YU",
+            "is_team": false
+        },
+        {
+            "user_id": "652882026",
+            "user_name": "梣雨",
+            "is_team": false
+        },
+        {
+            "user_id": "953926159",
+            "user_name": "HHU_23_罗誉",
+            "is_team": false
+        },
+        {
+            "user_id": "851085833",
+            "user_name": "HHU_23_林煜斌",
+            "is_team": false
+        },
+        {
+            "user_id": "486064707",
+            "user_name": "ABai24",
+            "is_team": false
+        },
+        {
+            "user_id": "59576114",
+            "user_name": "HHU_23_江晟东",
+            "is_team": false
+        },
+        {
+            "user_id": "498147042",
+            "user_name": "Measheep",
+            "is_team": false
+        },
+        {
+            "user_id": "319795248",
+            "user_name": "HHU_23_张紫轩",
+            "is_team": false
+        },
+        {
+            "user_id": "971286211",
+            "user_name": "HHU_23_钱子恒",
+            "is_team": false
+        },
+        {
+            "user_id": "291694248",
+            "user_name": "HHU_23_李昱泓",
+            "is_team": false
+        },
+        {
+            "user_id": "533225732",
+            "user_name": "HHU_23_金炬光",
+            "is_team": false
+        },
+        {
+            "user_id": "332702230",
+            "user_name": "shadowmaker",
+            "is_team": false
+        },
+        {
+            "user_id": "429553220",
+            "user_name": "HHU_23_曾国琳",
+            "is_team": false
+        },
+        {
+            "user_id": "148721375",
+            "user_name": "憧憬成为膜法acmer",
+            "is_team": true
+        },
+        {
+            "user_id": "510556209",
+            "user_name": "partlyovercast",
+            "is_team": false
+        },
+        {
+            "user_id": "610594022",
+            "user_name": "Arch_Srginit",
+            "is_team": false
+        },
+        {
+            "user_id": "171050224",
+            "user_name": "misakimei0331",
+            "is_team": false
+        },
+        {
+            "user_id": "727270202",
+            "user_name": "HHU_23_覃振涛",
+            "is_team": false
+        },
+        {
+            "user_id": "306083136",
+            "user_name": "dozuhe",
+            "is_team": false
+        }
     ]
 }

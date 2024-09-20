@@ -9,7 +9,7 @@ class statistic_nowcoder :
         header = {
             'user-agent': "Mozilla/5.0 (Windows NT self.max_working_thread_count.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
         }
-        self.crawler = Crawl_Nowcoder(requests_header=header, requests_timeout=3)
+        self.crawler = Crawl_Nowcoder(requests_header=header, requests_timeout=60)
         self.max_working_thread_count = max_working_thread_count
         self.user_example = {
             "latest_timestamp" : "0",
@@ -299,7 +299,7 @@ class statistic_nowcoder :
                             found = True
                             if now["accept_cnt"] != last["accept_cnt"] :
                                 change = True
-                                break
+                            break
                     if change :
                         break
                     if not found:

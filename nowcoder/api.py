@@ -9,7 +9,7 @@ from flask import jsonify, request
 class API_Nowcoder(MethodView):
     def __init__(self):
         super().__init__()
-        self.nowcoder = statistic_nowcoder(10)
+        self.nowcoder = statistic_nowcoder(100)
 
     def get(self):
         action = request.args.get('action')
